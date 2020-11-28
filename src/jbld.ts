@@ -3,12 +3,18 @@ import { join as pathJoin } from "path";
 import getLernaConfig from "./get-lerna-config";
 import getLernaData from "./get-lerna-data";
 import getPackageConfig from "./get-package-config";
+import gunzip from "./gunzip";
 import makeDirectory from "./make-directory";
 import writeJsonFile from "./write-json-file";
 
 const args = process.argv.slice(2);
 
 const run = async () => {
+  if (args[0] === "gunzip" && args.length > 2) {
+    await gunzip(args[1], args[2]);
+    return;
+  }
+
   const lernaConfig = await getLernaConfig();
 
   if (!lernaConfig) {
@@ -54,7 +60,12 @@ const run = async () => {
   // console.log("lerna: %O", lernaConfig);
 };
 
-run();
+run()
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
 
 // read lerna file
 // get lerna map
