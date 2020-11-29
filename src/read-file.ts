@@ -1,11 +1,13 @@
 import { readFile as fsReadFile } from "fs";
 
-const readFile = async (
-  filename: string,
-  encoding = "utf8"
-): Promise<string> => {
+async function readFile(fileName: string): Promise<Buffer>;
+async function readFile(fileName: string, encoding: string): Promise<string>;
+async function readFile(
+  fileName: string,
+  encoding?: string
+): Promise<string | Buffer> {
   return new Promise((resolve, reject) => {
-    fsReadFile(filename, encoding, (err, data) => {
+    fsReadFile(fileName, encoding, (err, data) => {
       if (err) {
         reject(err);
         return;
@@ -14,6 +16,6 @@ const readFile = async (
       resolve(data);
     });
   });
-};
+}
 
 export default readFile;
