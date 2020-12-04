@@ -42,24 +42,28 @@ class Tar extends Readable {
   }
 
   _read() {
-    if (!this.currentFile) {
-      this.currentFile = this.getNext();
-
+    try {
       if (!this.currentFile) {
-        // we're done!
-        this.push(Buffer.alloc(1024));
-        this.push(null);
-        return;
-      }
+        this.currentFile = this.getNext();
 
-      if (isTarFileSource(this.currentFile)) {
-        const { src, ...header } = this.currentFile;
-        this.push(packFile(src(), header));
-        this.currentFile = undefined;
-        return;
-      }
+        if (!this.currentFile) {
+          // we're done!
+          this.push(Buffer.alloc(1024));
+          this.push(null);
+          return;
+        }
 
-      throw new Error("Unhandled");
+        if (isTarFileSource(this.currentFile)) {
+          const { src, ...header } = this.currentFile;
+          this.push(packFile(src(), header));
+          this.currentFile = undefined;
+          return;
+        }
+
+        throw new Error("Unhandled");
+      }
+    } catch (err: unknown) {
+      this.destroy(err instanceof Error ? err : new Error(String(err)));
     }
   }
 }
