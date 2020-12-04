@@ -32,12 +32,12 @@
     ]
   },
   "license": "MIT",
-  "name": "@jbsulli/cli",
+  "name": "@jbsulli/lerna-docker",
   "prettier": "@jbsulli/eslint-config/prettier.yml",
   "peerDependencies": {
     "lerna": "^3.22.1"
   },
-  "repository": "https://github.com/jbsulli/cli.git",
+  "repository": "https://github.com/jbsulli/lerna-docker.git",
   "scripts": {
     "build": "npx babel ./src --out-dir .dist --extensions \".ts\" --source-maps --ignore \"**/*.test.ts\"",
     "test": "jest"
