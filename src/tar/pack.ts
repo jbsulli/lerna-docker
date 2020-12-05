@@ -1,3 +1,4 @@
+import { Readable } from "stream";
 import { format } from "util";
 
 import tarHeaderFormat, { ITarHeaderField } from "./header-format";
@@ -153,8 +154,8 @@ const handlers = {
 };
 
 export const packHeader = ({
-  accessed = new Date(),
-  created = new Date(),
+  accessed,
+  created,
   deviceMajor = 0,
   deviceMinor = 0,
   gid = 0,
@@ -190,15 +191,18 @@ export const packHeader = ({
 
   let checksumField: ITarHeaderField | undefined;
 
-  tarHeaderFormat.forEach(({ name, size, offset, type }, i) => {
+  tarHeaderFormat.forEach(({ name, size, offset, optional, type }, i) => {
     if (name === "checksum") {
       checksumField = tarHeaderFormat[i];
       return;
     }
 
     const handler = handlers[name] ?? handlers[type];
-    const fieldBuf = handler(options[name], `${options.name}:${name}`, size);
-    fieldBuf.copy(buf, offset);
+    const value = options[name];
+    if (!optional || value !== undefined || value !== null) {
+      const fieldBuf = handler(options[name], `${options.name}:${name}`, size);
+      fieldBuf.copy(buf, offset);
+    }
   });
 
   if (checksumField) {
@@ -228,4 +232,55 @@ export const packFile = (
   }
 
   return Buffer.concat(buf);
+};
+
+class TarEntryStream extends Readable {
+  private options: ITarEntryOptions;
+  private src: Readable;
+  private readHeader: boolean;
+  private done: boolean;
+
+  constructor(src: Readable, options: ITarEntryOptions) {
+    super();
+    this.options = options;
+    this.src = src;
+    this.readHeader = false;
+    this.done = false;
+  }
+
+  _read(size) {
+    let chunk: Buffer | null;
+
+    if (!this.readHeader) {
+      // push the header
+      if (!this.push(packHeader(this.options))) {
+        return;
+      }
+    }
+
+    do {
+      // was the last chunk the body padding?
+      if (this.done) {
+        this.push(null);
+        return;
+      }
+
+      chunk = this.src.read(size);
+
+      if (chunk === null) {
+        // wait to send null until the next pass because we need to push the padding
+        this.done = true;
+
+        // push body padding
+        chunk = Buffer.alloc(512 - (this.options.size % 512));
+      }
+    } while (this.push(chunk));
+  }
+}
+
+export const packStream = (
+  src: Readable,
+  options: ITarEntryOptions
+): Readable => {
+  return new TarEntryStream(src, options);
 };

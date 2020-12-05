@@ -1,6 +1,7 @@
 export interface ITarHeaderField {
   name: string;
   offset: number;
+  optional?: boolean;
   size: number;
   type: "enum" | "number" | "octal" | "string" | "time";
 }
@@ -19,11 +20,11 @@ const tarHeaderFormat: ITarHeaderField[] = [
   { name: "ustarVersion", offset: 263, size: 2, type: "enum" },
   { name: "userName", offset: 265, size: 32, type: "string" },
   { name: "groupName", offset: 297, size: 32, type: "string" },
-  { name: "deviceMajor", offset: 329, size: 8, type: "number" },
-  { name: "deviceMinor", offset: 337, size: 8, type: "number" },
+  { name: "deviceMajor", offset: 329, optional: true, size: 8, type: "number" },
+  { name: "deviceMinor", offset: 337, optional: true, size: 8, type: "number" },
   { name: "prefix", offset: 345, size: 131, type: "string" },
-  { name: "accessed", offset: 476, size: 12, type: "time" },
-  { name: "created", offset: 488, size: 12, type: "time" },
+  { name: "accessed", offset: 476, optional: true, size: 12, type: "time" },
+  { name: "created", offset: 488, optional: true, size: 12, type: "time" },
   { name: "pad", offset: 500, size: 12, type: "string" },
 ];
 
